@@ -1,0 +1,62 @@
+version: "3"
+services:
+  kafka:
+    image: 'bitnami/kafka:latest'
+    restart: "unless-stopped"
+    ports:
+      - '9092:9094'  # Exponer el puerto 9092 para uso interno y externo
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+
+      # Habilitar auto creación de tópicos
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+  akhq:
+    image: tchiotludo/akhq
+    restart: "unless-stopped"
+    ports:
+      - "9000:8080"
+    environment:
+      AKHQ_CONFIGURATION: |
+        micronaut:
+          security:
+            enabled: true
+        akhq:
+          connections:
+            docker-kafka-server:
+              properties:
+                bootstrap.servers: "kafka:9092"
+              schema-registry:
+                url: "http://schema-registry:8085"
+              connect:
+                - name: "connect"
+                  url: "http://connect:8083"
+          security:
+            default-group: no-roles 
+            basic-auth:
+              - username: dev
+                password: "ef260e9aa3c673af240d17a2660480361a8e081d1ffeca2a5ed0e3219fc18567"
+                groups:
+                - admin
+              - username: qa
+                password: "3f3ef786b34d6dd716e1812c8b74a7a0e1f05aa5f3230588f6f5bcd00c6c8392"
+                groups:
+                - reader
+    depends_on:
+      - kafka
+    volumes:
+      - akhq_data:/var/lib/akhq
+
+volumes:
+  kafka_data:
+    driver: local
+  akhq_data:
+    driver: local
