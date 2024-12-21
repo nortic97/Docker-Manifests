@@ -43,11 +43,11 @@ services:
             default-group: no-roles 
             basic-auth:
               - username: dev
-                password: "ef260e9aa3c673af240d17a2660480361a8e081d1ffeca2a5ed0e3219fc18567"
+                password: ${DEV_PASSWORD:-ef260e9aa3c673af240d17a2660480361a8e081d1ffeca2a5ed0e3219fc18567}
                 groups:
                 - admin
               - username: qa
-                password: "3f3ef786b34d6dd716e1812c8b74a7a0e1f05aa5f3230588f6f5bcd00c6c8392"
+                password: ${DEV_PASSWORD:-3f3ef786b34d6dd716e1812c8b74a7a0e1f05aa5f3230588f6f5bcd00c6c8392}
                 groups:
                 - reader
     depends_on:
